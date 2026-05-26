@@ -16,6 +16,7 @@ interface ProfileCardProps {
   creditScore?: number;
   totalTips?: string;
   streak?: number;
+  dataTourId?: string;
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({
@@ -27,6 +28,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
   creditScore,
   totalTips,
   streak,
+  dataTourId,
 }) => {
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorite = isFavorite(publicKey);
@@ -79,6 +81,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           </div>
 
           <button
+            data-tour-id={dataTourId}
             onClick={onTip}
             className="w-full py-2 bg-black text-white text-xs font-black uppercase tracking-wider border-2 border-black hover:bg-gray-800 transition-colors"
           >
@@ -133,6 +136,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({
           {bio || "This creator hasn't added a bio yet. Support their work by sending a tip!"}
         </p>
         <button
+          data-tour-id={dataTourId}
           onClick={onTip}
           className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors shadow-sm"
         >

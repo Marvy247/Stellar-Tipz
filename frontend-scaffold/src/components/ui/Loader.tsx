@@ -19,6 +19,7 @@ const Loader: React.FC<LoaderProps> = ({ size = 'md', text, ...props }) => {
   return (
     <div className="flex flex-col items-center gap-3" {...props}>
       <div
+        data-essential-motion="loading"
         className={`${sizes[size]} border-black border-t-transparent rounded-full animate-spin`}
       />
       {text && (
