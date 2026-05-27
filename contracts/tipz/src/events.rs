@@ -464,3 +464,72 @@ pub fn emit_domain_verification_expired(env: &Env, creator: &Address) {
         creator.clone(),
     );
 }
+
+// ── Goal events ───────────────────────────────────────────────────────────────
+
+/// Topics : `("goal", "set")`
+pub fn emit_goal_set(env: &Env, creator: &Address, target: i128, description: &String, deadline: u64) {
+    env.events().publish(
+        (Symbol::new(env, "goal"), symbol_short!("set")),
+        (creator.clone(), target, description.clone(), deadline),
+    );
+}
+
+/// Topics : `("goal", "reached")`
+pub fn emit_goal_reached(env: &Env, creator: &Address, target: i128, raised: i128) {
+    env.events().publish(
+        (Symbol::new(env, "goal"), symbol_short!("reached")),
+        (creator.clone(), target, raised),
+    );
+}
+
+/// Topics : `("goal", "cancel")`
+pub fn emit_goal_cancelled(env: &Env, creator: &Address) {
+    env.events().publish(
+        (Symbol::new(env, "goal"), symbol_short!("cancel")),
+        creator.clone(),
+    );
+}
+
+// ── Multi-token events ────────────────────────────────────────────────────────
+
+/// Topics : `("token", "added")`
+pub fn emit_token_added(env: &Env, token: &Address, oracle: &Option<Address>) {
+    env.events().publish(
+        (Symbol::new(env, "token"), symbol_short!("added")),
+        (token.clone(), oracle.clone()),
+    );
+}
+
+/// Topics : `("token", "removed")`
+pub fn emit_token_removed(env: &Env, token: &Address) {
+    env.events().publish(
+        (Symbol::new(env, "token"), symbol_short!("removed")),
+        token.clone(),
+    );
+}
+
+/// Topics : `("tip", "token")`
+pub fn emit_tip_sent_token(
+    env: &Env,
+    tip_id: u32,
+    tipper: &Address,
+    creator: &Address,
+    amount: i128,
+    token: &Address,
+    message: &String,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (symbol_short!("tip"), Symbol::new(env, "token")),
+        (
+            tip_id,
+            tipper.clone(),
+            creator.clone(),
+            amount,
+            token.clone(),
+            message.clone(),
+            timestamp,
+        ),
+    );
+}

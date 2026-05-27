@@ -44,4 +44,8 @@ pub enum ContractError {
     BelowCreatorMinimum = 34,
     /// Domain format is invalid or empty when required
     InvalidDomain = 35,
+    /// Generic invalid input error
+    InvalidInput = 36,
+    /// Token is not in the accepted whitelist
+    TokenNotAccepted = 37,
 }

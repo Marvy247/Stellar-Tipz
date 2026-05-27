@@ -195,6 +195,9 @@ pub fn send_tip(
     storage::set_profile(env, &profile);
     leaderboard::update_all_leaderboards_for_active(env, &profile, amount);
 
+    // Update goal progress
+    crate::goals::update_goal_progress(env, creator, amount);
+
     // Bump TTL for both Profile and UsernameToAddress together.
     storage::bump_existing_profile_ttl(env, creator);
     storage::bump_username_ttl(env, &profile.username);

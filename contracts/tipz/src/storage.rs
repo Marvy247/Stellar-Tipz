@@ -146,6 +146,21 @@ pub enum DataKey {
     CreatorPeriodVolume(Address, crate::types::LeaderboardPeriod, u64),
 }
 
+/// Extended storage keys for new features (separate enum to avoid size limits)
+#[contracttype]
+pub enum ExtendedDataKey {
+    /// Active goal for a creator
+    ActiveGoal(Address),
+    /// Archived goals for a creator
+    ArchivedGoals(Address),
+    /// Accepted token configuration by token address
+    AcceptedToken(Address),
+    /// List of all accepted token addresses
+    AcceptedTokenList,
+    /// Token balance for a creator by (creator, token)
+    TokenBalance(Address, Address),
+}
+
 /// Storage keys for compact performance caches.
 #[contracttype]
 pub enum CacheKey {
@@ -1661,4 +1676,82 @@ pub fn set_creator_last_active(env: &Env, creator: &Address, timestamp: u64) {
     env.storage()
         .persistent()
         .set(&DataKey::CreatorLastActive(creator.clone()), &timestamp);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Goal storage functions
+// ──────────────────────────────────────────────────────────────────────────────
+
+pub fn get_active_goal(env: &Env, creator: &Address) -> Option<crate::types::Goal> {
+    env.storage()
+        .persistent()
+        .get(&ExtendedDataKey::ActiveGoal(creator.clone()))
+}
+
+pub fn set_active_goal(env: &Env, creator: &Address, goal: &crate::types::Goal) {
+    env.storage()
+        .persistent()
+        .set(&ExtendedDataKey::ActiveGoal(creator.clone()), goal);
+}
+
+pub fn get_archived_goals(env: &Env, creator: &Address) -> soroban_sdk::Vec<crate::types::Goal> {
+    env.storage()
+        .persistent()
+        .get(&ExtendedDataKey::ArchivedGoals(creator.clone()))
+        .unwrap_or(soroban_sdk::Vec::new(env))
+}
+
+pub fn set_archived_goals(env: &Env, creator: &Address, goals: &soroban_sdk::Vec<crate::types::Goal>) {
+    env.storage()
+        .persistent()
+        .set(&ExtendedDataKey::ArchivedGoals(creator.clone()), goals);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Multi-token storage functions
+// ──────────────────────────────────────────────────────────────────────────────
+
+pub fn get_accepted_token(env: &Env, token: &Address) -> Option<crate::types::AcceptedToken> {
+    env.storage()
+        .instance()
+        .get(&ExtendedDataKey::AcceptedToken(token.clone()))
+}
+
+pub fn set_accepted_token(env: &Env, token: &Address, config: &crate::types::AcceptedToken) {
+    env.storage()
+        .instance()
+        .set(&ExtendedDataKey::AcceptedToken(token.clone()), config);
+}
+
+pub fn get_accepted_token_list(env: &Env) -> soroban_sdk::Vec<Address> {
+    env.storage()
+        .instance()
+        .get(&ExtendedDataKey::AcceptedTokenList)
+        .unwrap_or(soroban_sdk::Vec::new(env))
+}
+
+pub fn set_accepted_token_list(env: &Env, tokens: &soroban_sdk::Vec<Address>) {
+    env.storage()
+        .instance()
+        .set(&ExtendedDataKey::AcceptedTokenList, tokens);
+}
+
+pub fn get_token_balance(env: &Env, creator: &Address, token: &Address) -> i128 {
+    env.storage()
+        .persistent()
+        .get(&ExtendedDataKey::TokenBalance(creator.clone(), token.clone()))
+        .unwrap_or(0)
+}
+
+pub fn set_token_balance(env: &Env, creator: &Address, token: &Address, amount: i128) {
+    env.storage()
+        .persistent()
+        .set(&ExtendedDataKey::TokenBalance(creator.clone(), token.clone()), &amount);
+}
+
+pub fn add_token_balance(env: &Env, creator: &Address, token: &Address, amount: i128) -> Result<i128, ContractError> {
+    let current = get_token_balance(env, creator, token);
+    let new_balance = current.checked_add(amount).ok_or(ContractError::OverflowError)?;
+    set_token_balance(env, creator, token, new_balance);
+    Ok(new_balance)
 }
