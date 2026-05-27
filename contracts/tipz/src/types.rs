@@ -333,3 +333,49 @@ pub struct RateLimitStatus {
     /// Timestamp when the current window started
     pub last_op_time: u64,
 }
+
+/// Goal tracking for creators
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct Goal {
+    /// Creator address
+    pub creator: Address,
+    /// Target amount to raise
+    pub target: i128,
+    /// Amount raised so far
+    pub raised: i128,
+    /// Goal description (max 500 chars)
+    pub description: String,
+    /// Deadline timestamp (0 = no deadline)
+    pub deadline: u64,
+    /// Whether the goal is currently active
+    pub active: bool,
+    /// Timestamp when goal was created
+    pub created_at: u64,
+    /// Timestamp when goal was reached (None = not reached yet)
+    pub reached_at: Option<u64>,
+}
+
+/// Accepted token configuration for multi-token tipping
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct AcceptedToken {
+    /// Token contract address
+    pub token_address: Address,
+    /// Oracle address for price conversion (optional)
+    pub oracle_address: Option<Address>,
+    /// Whether the token is currently enabled
+    pub enabled: bool,
+    /// Timestamp when token was added
+    pub added_at: u64,
+}
+
+/// Token balance for a creator
+#[contracttype]
+#[derive(Clone, Debug, PartialEq)]
+pub struct TokenBalance {
+    /// Token contract address
+    pub token_address: Address,
+    /// Balance amount
+    pub amount: i128,
+}

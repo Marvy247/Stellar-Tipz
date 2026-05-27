@@ -18,7 +18,9 @@ mod credit;
 mod errors;
 mod events;
 mod fees;
+mod goals;
 mod leaderboard;
+mod multitoken;
 mod multisig;
 mod profile;
 mod stats;
@@ -775,5 +777,91 @@ impl TipzContract {
         creator: Address,
     ) -> Result<stats::CreatorStats, ContractError> {
         stats::get_creator_stats(&env, &creator)
+    }
+
+    // ──────────────────────────────────────────────
+    // Goal Tracking
+    // ──────────────────────────────────────────────
+
+    /// Set a fundraising goal for a creator
+    pub fn set_goal(
+        env: Env,
+        creator: Address,
+        target_amount: i128,
+        description: String,
+        deadline: u64,
+    ) -> Result<(), ContractError> {
+        goals::set_goal(&env, &creator, target_amount, &description, deadline)
+    }
+
+    /// Get the active goal for a creator
+    pub fn get_goal(env: Env, creator: Address) -> Result<types::Goal, ContractError> {
+        goals::get_goal(&env, &creator)
+    }
+
+    /// Cancel the active goal for a creator
+    pub fn cancel_goal(env: Env, creator: Address) -> Result<(), ContractError> {
+        goals::cancel_goal(&env, &creator)
+    }
+
+    /// Get archived goals for a creator
+    pub fn get_archived_goals(env: Env, creator: Address) -> Vec<types::Goal> {
+        goals::get_archived_goals(&env, &creator)
+    }
+
+    // ──────────────────────────────────────────────
+    // Multi-Token Support
+    // ──────────────────────────────────────────────
+
+    /// Add a token to the whitelist of accepted tokens (admin only)
+    pub fn add_accepted_token(
+        env: Env,
+        admin: Address,
+        token: Address,
+        oracle: Option<Address>,
+    ) -> Result<(), ContractError> {
+        multitoken::add_accepted_token(&env, &admin, &token, oracle)
+    }
+
+    /// Remove a token from the whitelist (admin only)
+    pub fn remove_accepted_token(
+        env: Env,
+        admin: Address,
+        token: Address,
+    ) -> Result<(), ContractError> {
+        multitoken::remove_accepted_token(&env, &admin, &token)
+    }
+
+    /// Get list of all accepted tokens
+    pub fn get_accepted_tokens(env: Env) -> Vec<types::AcceptedToken> {
+        multitoken::get_accepted_tokens(&env)
+    }
+
+    /// Send a tip using a specific token
+    pub fn send_tip_token(
+        env: Env,
+        tipper: Address,
+        creator: Address,
+        amount: i128,
+        token: Address,
+        message: String,
+        is_anonymous: bool,
+    ) -> Result<(), ContractError> {
+        multitoken::send_tip_token(&env, &tipper, &creator, amount, &token, &message, is_anonymous)
+    }
+
+    /// Withdraw accumulated tips in a specific token
+    pub fn withdraw_token(
+        env: Env,
+        caller: Address,
+        token: Address,
+        amount: i128,
+    ) -> Result<(), ContractError> {
+        multitoken::withdraw_token(&env, &caller, &token, amount)
+    }
+
+    /// Get all token balances for a creator
+    pub fn get_token_balances(env: Env, creator: Address) -> Vec<types::TokenBalance> {
+        multitoken::get_token_balances(&env, &creator)
     }
 }
