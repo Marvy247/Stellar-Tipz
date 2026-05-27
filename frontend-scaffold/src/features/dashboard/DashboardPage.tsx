@@ -3,6 +3,7 @@ import { Bell, LayoutDashboard, Wallet, X, Flame } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import PageContainer from "@/components/layout/PageContainer";
+import Breadcrumbs from "@/components/shared/Breadcrumbs";
 import ErrorState from "@/components/shared/ErrorState";
 import WalletConnect from "@/components/shared/WalletConnect";
 import Button from "@/components/ui/Button";
@@ -44,6 +45,7 @@ const DashboardPage: React.FC = () => {
   if (!connected) {
     return (
       <PageContainer maxWidth="xl" className="space-y-8 py-10">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} />
         <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-gray-800 dark:text-gray-200">
@@ -72,6 +74,7 @@ const DashboardPage: React.FC = () => {
         className="space-y-8 py-10"
         aria-busy="true"
       >
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} />
         <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <Skeleton variant="text" width="200px" height="12px" />
@@ -104,6 +107,7 @@ const DashboardPage: React.FC = () => {
   if (!profile) {
     return (
       <PageContainer maxWidth="xl" className="space-y-8 py-10">
+        <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} />
         <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-gray-800 dark:text-gray-200">
@@ -195,6 +199,7 @@ const DashboardPage: React.FC = () => {
   return (
     <DashboardProvider value={dashboard}>
     <PageContainer maxWidth="xl" className="space-y-8 py-10">
+      <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]} />
       <section aria-labelledby="dashboard-heading" className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.25em] text-gray-800 dark:text-gray-200">
