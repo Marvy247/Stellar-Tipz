@@ -1,3 +1,5 @@
+import { mapContractResponse } from "../helpers/format";
+
 /**
  * Raw profile shape returned by the Soroban contract before key mapping.
  * Field names match the Rust struct fields (snake_case).
@@ -80,6 +82,7 @@ export interface LeaderboardEntry {
   username: string;
   totalTipsReceived: string;
   creditScore: number;
+  score?: number; // Optional alias for backward compatibility / tests
 }
 
 /** Global contract statistics */
@@ -101,3 +104,45 @@ export const getCreditTier = (score: number): CreditTier => {
   if (score >= 20) return 'bronze';
   return 'new';
 };
+
+/** Contract interface version */
+export const CONTRACT_INTERFACE_VERSION = '1.0.0';
+
+/**
+ * Parsers that transform raw contract responses into strongly-typed frontend objects.
+ * Standardizes key case from snake_case to camelCase.
+ */
+
+export function parseProfile(raw: any): Profile {
+  if (!raw) {
+    throw new Error('Invalid raw profile: null or undefined');
+  }
+  return mapContractResponse<Profile>(raw);
+}
+
+export function parseLeaderboardEntry(raw: any): LeaderboardEntry {
+  if (!raw) {
+    throw new Error('Invalid raw leaderboard entry: null or undefined');
+  }
+  const parsed = mapContractResponse<any>(raw);
+  if (parsed.score !== undefined && parsed.creditScore === undefined) {
+    parsed.creditScore = parsed.score;
+  } else if (parsed.creditScore !== undefined && parsed.score === undefined) {
+    parsed.score = parsed.creditScore;
+  }
+  return parsed as LeaderboardEntry;
+}
+
+export function parseTip(raw: any): Tip {
+  if (!raw) {
+    throw new Error('Invalid raw tip: null or undefined');
+  }
+  return mapContractResponse<Tip>(raw);
+}
+
+export function parseContractStats(raw: any): ContractStats {
+  if (!raw) {
+    throw new Error('Invalid raw contract stats: null or undefined');
+  }
+  return mapContractResponse<ContractStats>(raw);
+}
