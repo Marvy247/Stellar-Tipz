@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 
 import App from "./App";
 import { I18nProvider } from "./i18n";
+import { logger } from "./services/logger";
 
 import "./index.scss";
 
@@ -48,8 +49,17 @@ function InstallPromptBanner() {
             className="border-2 border-black bg-black px-4 py-2 text-xs font-black uppercase tracking-wide text-white"
             onClick={async () => {
               if (!deferredPrompt) return;
-              await deferredPrompt.prompt();
-              await deferredPrompt.userChoice.catch(() => null);
+              try {
+                await deferredPrompt.prompt();
+                await deferredPrompt.userChoice;
+              } catch (err) {
+                logger.warn(
+                  'index',
+                  'Install prompt dismissed or failed',
+                  undefined,
+                  err instanceof Error ? err : new Error(String(err)),
+                );
+              }
               setVisible(false);
               setDeferredPrompt(null);
             }}

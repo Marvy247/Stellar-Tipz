@@ -1,6 +1,7 @@
 import React from 'react';
 import ErrorState from './ErrorState';
 import { categorizeError } from '@/helpers/error';
+import { logger } from '../../services/logger';
 
 interface ErrorBoundaryProps {
   fallback?: React.ReactNode;
@@ -46,12 +47,6 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       console.error('Error info:', errorInfo);
     }
     
-    // Log error with component stack
-    console.group('Error Boundary Error Details');
-    console.error('Error:', error);
-    console.error('Component Stack:', errorInfo.componentStack);
-    console.groupEnd();
-    
     // Future: Send to analytics service
     this.reportError(error, errorInfo);
   }
@@ -67,14 +62,12 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
   reportError = (error: Error, errorInfo: React.ErrorInfo) => {
     // Future: Send to analytics service
-    if (import.meta.env.DEV) {
-      console.log('Error reporting hook - would send to analytics:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-        timestamp: new Date().toISOString(),
-      });
-    }
+    logger.debug('components/shared/ErrorBoundary', 'Error reporting hook', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+    });
   };
 
   render() {
