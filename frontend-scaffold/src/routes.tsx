@@ -26,6 +26,7 @@ const SettingsPage = lazy(() => import("@/features/settings/SettingsPage"));
 const SubscribePage = lazy(() => import("@/features/subscriptions/SubscribePage"));
 const AdminDashboard = lazy(() => import("@/features/admin/AdminDashboard"));
 const HelpPage = lazy(() => import("@/features/help/HelpPage"));
+const HealthPage = lazy(() => import("@/features/health/HealthPage"));
 const NotFoundPage = lazy(() => import("@/features/not-found/NotFoundPage"));
 
 /**
@@ -93,6 +94,10 @@ export const routes: RouteObject[] = [
   {
     path: "/help",
     element: wrap(<HelpPage />),
+  },
+  {
+    path: "/health",
+    element: wrap(<HealthPage />),
   },
   {
     path: "*",

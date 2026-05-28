@@ -94,6 +94,13 @@ export default defineConfig({
       sriPlugin(),
       bundleAnalyzerPlugin(),
     ],
+    define: {
+      // Inject build information for health check (#547)
+      'import.meta.env.VITE_BUILD_TIMESTAMP': JSON.stringify(new Date().toISOString()),
+      'import.meta.env.VITE_GIT_COMMIT': JSON.stringify(
+        process.env.GIT_COMMIT || process.env.VERCEL_GIT_COMMIT_SHA || 'unknown'
+      ),
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "src"),
