@@ -1,11 +1,11 @@
 //! Profile registration and update logic for the Tipz contract.
 
-use soroban_sdk::{Address, Env, String};
+use soroban_sdk::{Address, Env, String, Vec};
 
 use crate::errors::ContractError;
 use crate::events;
 use crate::storage;
-use crate::types::{Profile, ProfileWithDeactivation};
+use crate::types::{Profile, ProfileWithDeactivation, MAX_DISPLAY_NAME_LENGTH, MAX_BIO_LENGTH, INACTIVE_PROFILE_THRESHOLD_SECS};
 use crate::validation;
 
 /// Register a new creator profile.
@@ -49,6 +49,11 @@ pub fn register_profile(
     if !storage::is_initialized(env) {
         return Err(ContractError::NotInitialized);
     }
+
+    // --- DoS protection: max profiles and registration rate limiting ---
+
+    validation::validate_profile_count(env)?;
+    validation::validate_registration_rate_limit(env, &caller)?;
 
     // --- Input validation (centralized in validation module) ---
 
@@ -161,14 +166,14 @@ pub fn update_profile(
 
     if let Some(ref dn) = display_name {
         let len = dn.len();
-        if len == 0 || len > 64 {
+        if len == 0 || len > MAX_DISPLAY_NAME_LENGTH {
             return Err(ContractError::InvalidDisplayName);
         }
         profile.display_name = dn.clone();
     }
 
     if let Some(ref b) = bio {
-        if b.len() > 280 {
+        if b.len() > MAX_BIO_LENGTH {
             return Err(ContractError::MessageTooLong);
         }
         profile.bio = b.clone();
@@ -537,4 +542,122 @@ pub fn refresh_domain_verification_status(env: &Env, creator: &Address) {
     profile.updated_at = now;
     storage::set_profile(env, &profile);
     events::emit_domain_verification_expired(env, creator);
+}
+
+/// Check whether a profile is eligible for cleanup based on inactivity.
+///
+/// Returns `true` if the profile has been inactive beyond
+/// [`INACTIVE_PROFILE_THRESHOLD_SECS`] and has a zero balance.
+pub fn is_profile_inactive_eligible(env: &Env, address: &Address) -> bool {
+    let now = env.ledger().timestamp();
+    let last_active = storage::get_creator_last_active(env, address);
+
+    // Profile must never have been active (registered but no tips received)
+    // or inactive beyond the threshold
+    if last_active == 0 {
+        // Check registration time instead
+        if let Some(profile) = storage::get_profile_opt(env, address) {
+            return now >= profile.registered_at.saturating_add(INACTIVE_PROFILE_THRESHOLD_SECS);
+        }
+        return false;
+    }
+
+    let is_inactive = now >= last_active.saturating_add(INACTIVE_PROFILE_THRESHOLD_SECS);
+
+    // Only eligible if balance is zero (no funds to lose)
+    if is_inactive {
+        if let Some(profile) = storage::get_profile_opt(env, address) {
+            return profile.balance == 0;
+        }
+    }
+
+    false
+}
+
+/// Cleanup an inactive profile (admin only).
+///
+/// Removes the profile and associated data from storage. Only profiles that
+/// have been inactive beyond [`INACTIVE_PROFILE_THRESHOLD_SECS`] and have a
+/// zero balance are eligible. This prevents storage bloat from abandoned profiles.
+///
+/// # Requirements
+/// - Caller must be the admin
+/// - Profile must be inactive beyond the threshold
+/// - Profile balance must be zero
+///
+/// # Returns
+/// The cleaned up profile's username on success.
+///
+/// # Errors
+/// - [`ContractError::NotRegistered`] if the address has no profile
+/// - [`ContractError::ProfileInactive`] if the profile is still active
+/// - [`ContractError::BalanceNotZero`] if the profile has unwithdrawn funds
+pub fn cleanup_inactive_profile(
+    env: &Env,
+    admin: Address,
+    target: Address,
+) -> Result<String, ContractError> {
+    storage::extend_instance_ttl(env);
+    crate::admin::require_admin(env, &admin)?;
+
+    if !storage::has_profile(env, &target) {
+        return Err(ContractError::NotRegistered);
+    }
+
+    if !is_profile_inactive_eligible(env, &target) {
+        return Err(ContractError::ProfileInactive);
+    }
+
+    let profile = storage::get_profile(env, &target);
+    let username = profile.username.clone();
+
+    // Cleanup all associated data
+    storage::clear_profile_deactivation(env, &target);
+    storage::remove_profile(env, &target);
+    storage::remove_username_address(env, &username);
+    storage::decrement_total_creators(env);
+    crate::leaderboard::remove_from_all_leaderboards(env, &target);
+    storage::reset_creator_tip_index(env, &target);
+    storage::reset_tipper_tip_index(env, &target);
+
+    events::emit_profile_deregistered(env, &target, &username);
+
+    Ok(username)
+}
+
+/// Batch cleanup of inactive profiles (admin only).
+///
+/// Iterates over a provided list of addresses and removes those that meet
+/// inactivity criteria. Skips active profiles and those with balances.
+///
+/// # Parameters
+/// - `admin` - must be the contract admin
+/// - `targets` - list of addresses to check and potentially clean up
+/// - `max_cleanup` - maximum number of profiles to remove in one call (capped at 20)
+///
+/// # Returns
+/// Number of profiles actually cleaned up.
+pub fn cleanup_inactive_profiles(
+    env: &Env,
+    admin: Address,
+    targets: Vec<Address>,
+    max_cleanup: u32,
+) -> Result<u32, ContractError> {
+    storage::extend_instance_ttl(env);
+    crate::admin::require_admin(env, &admin)?;
+
+    let cap = if max_cleanup > 20 { 20 } else { max_cleanup };
+    let mut cleaned: u32 = 0;
+
+    for i in 0..targets.len() {
+        if cleaned >= cap {
+            break;
+        }
+        let target = targets.get(i).unwrap();
+        if cleanup_inactive_profile(env, admin.clone(), target).is_ok() {
+            cleaned += 1;
+        }
+    }
+
+    Ok(cleaned)
 }

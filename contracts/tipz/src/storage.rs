@@ -1664,7 +1664,6 @@ pub fn set_active_creators_30d(env: &Env, count: u32) {
     }
 }
 
-#[allow(dead_code)]
 pub fn get_creator_last_active(env: &Env, creator: &Address) -> u64 {
     env.storage()
         .persistent()

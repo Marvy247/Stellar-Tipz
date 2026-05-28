@@ -2,6 +2,34 @@
 
 use soroban_sdk::{contracttype, Address, String};
 
+/// Maximum number of registered profiles to prevent storage DoS attacks.
+pub const MAX_PROFILES: u32 = 10_000;
+
+/// Maximum tip message length in characters.
+pub const MAX_MESSAGE_LENGTH: u32 = 280;
+
+/// Maximum username length in characters.
+pub const MAX_USERNAME_LENGTH: u32 = 32;
+
+/// Maximum display name length in characters.
+pub const MAX_DISPLAY_NAME_LENGTH: u32 = 64;
+
+/// Maximum bio length in characters.
+pub const MAX_BIO_LENGTH: u32 = 280;
+
+/// Inactive profile threshold in seconds (180 days).
+/// Profiles with no activity beyond this threshold may be cleaned up by the admin.
+pub const INACTIVE_PROFILE_THRESHOLD_SECS: u64 = 180 * 24 * 3600;
+
+/// Registration rate limit window in seconds (1 hour).
+pub const REGISTRATION_RATE_WINDOW_SECS: u64 = 3600;
+
+/// Maximum registrations per rate limit window.
+pub const MAX_REGISTRATIONS_PER_WINDOW: u32 = 20;
+
+/// Storage cost ceiling per operation in stroops (for analysis).
+pub const STORAGE_COST_CEILING: i128 = 100_000_000;
+
 /// Verification type for creator profiles.
 ///
 /// `Unverified` is the default state — it replaces `Option::None` so that

@@ -9,6 +9,7 @@ mod test_creator_min_tip;
 mod test_deregister;
 mod test_domain_verification;
 mod test_donation_page;
+mod test_dos_protection;
 mod test_events;
 mod test_fuzz;
 mod test_goals;

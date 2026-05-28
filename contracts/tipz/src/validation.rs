@@ -1,7 +1,11 @@
 //! Input validation functions for the Tipz contract.
+//!
+//! All length limits are derived from constants in [`crate::types`] to ensure
+//! consistent enforcement across the codebase.
 
 use crate::errors::ContractError;
 use crate::storage;
+use crate::types;
 use soroban_sdk::{Address, Env, String};
 
 /// Validate a username format.
@@ -12,11 +16,11 @@ use soroban_sdk::{Address, Env, String};
 /// - cannot end with an underscore
 pub fn validate_username(username: &String) -> Result<(), ContractError> {
     let len = username.len();
-    if len < 3 || len > 32 {
+    if len < 3 || len > types::MAX_USERNAME_LENGTH {
         return Err(ContractError::InvalidUsername);
     }
 
-    let mut buf = [0u8; 32];
+    let mut buf = [0u8; types::MAX_USERNAME_LENGTH as usize];
     username.copy_into_slice(&mut buf[..len as usize]);
 
     // Must start with a letter [a-z]
@@ -61,12 +65,12 @@ pub fn validate_username(username: &String) -> Result<(), ContractError> {
 /// Validate a display name (1-64 chars, not just whitespace).
 pub fn validate_display_name(display_name: &String) -> Result<(), ContractError> {
     let len = display_name.len();
-    if len == 0 || len > 64 {
+    if len == 0 || len > types::MAX_DISPLAY_NAME_LENGTH {
         return Err(ContractError::InvalidDisplayName);
     }
 
     // Check for whitespace only
-    let mut buf = [0u8; 64];
+    let mut buf = [0u8; types::MAX_DISPLAY_NAME_LENGTH as usize];
     display_name.copy_into_slice(&mut buf[..len as usize]);
     let mut only_whitespace = true;
     for i in 0..len as usize {
@@ -85,7 +89,7 @@ pub fn validate_display_name(display_name: &String) -> Result<(), ContractError>
 
 /// Validate a bio (max 280 chars).
 pub fn validate_bio(bio: &String) -> Result<(), ContractError> {
-    if bio.len() > 280 {
+    if bio.len() > types::MAX_BIO_LENGTH {
         return Err(ContractError::MessageTooLong);
     }
     Ok(())
@@ -93,12 +97,12 @@ pub fn validate_bio(bio: &String) -> Result<(), ContractError> {
 
 /// Validate a message (max 280 chars).
 pub fn validate_message(message: &String) -> Result<(), ContractError> {
-    if message.len() > 280 {
+    if message.len() > types::MAX_MESSAGE_LENGTH {
         return Err(ContractError::MessageTooLong);
     }
 
     if message.len() > 0 {
-        let mut buf = [0u8; 280];
+        let mut buf = [0u8; types::MAX_MESSAGE_LENGTH as usize];
         let n = message.len() as usize;
         message.copy_into_slice(&mut buf[..n]);
         for &b in &buf[..n] {
@@ -267,6 +271,49 @@ pub fn check_rate_limit_with_config(
         status.last_op_time = now;
     } else {
         if status.count >= config.max_ops {
+            return Err(ContractError::RateLimitExceeded);
+        }
+        status.count += 1;
+    }
+
+    storage::set_rate_limit_status(env, address, &status);
+    Ok(())
+}
+
+/// Check profile count against the maximum allowed to prevent storage DoS.
+pub fn validate_profile_count(env: &Env) -> Result<(), ContractError> {
+    let total = storage::get_total_creators(env);
+    if total >= types::MAX_PROFILES {
+        return Err(ContractError::MaxProfilesReached);
+    }
+    Ok(())
+}
+
+/// Check registration-specific rate limiting for an address.
+///
+/// Uses a separate counter from the general-purpose rate limiter
+/// to prevent an attacker from exhausting the registration budget
+/// with cheap non-registration operations.
+pub fn validate_registration_rate_limit(
+    env: &Env,
+    address: &Address,
+) -> Result<(), ContractError> {
+    let mut status =
+        storage::get_rate_limit_status(env, address).unwrap_or(crate::types::RateLimitStatus {
+            count: 0,
+            last_op_time: 0,
+        });
+
+    let now = env.ledger().timestamp();
+    if now
+        >= status
+            .last_op_time
+            .saturating_add(types::REGISTRATION_RATE_WINDOW_SECS)
+    {
+        status.count = 1;
+        status.last_op_time = now;
+    } else {
+        if status.count >= types::MAX_REGISTRATIONS_PER_WINDOW {
             return Err(ContractError::RateLimitExceeded);
         }
         status.count += 1;
