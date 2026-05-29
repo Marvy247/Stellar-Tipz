@@ -52,6 +52,10 @@ function isValidUrl(value: string): boolean {
   }
 }
 
+function isValidContractId(value: string): boolean {
+  return /^C[A-Z0-9]{55}$/.test(value);
+}
+
 /**
  * Validates required environment variables at startup.
  * Throws on missing critical vars; warns on missing optional vars.
@@ -63,7 +67,11 @@ export function validateEnv(envVars?: Record<string, string | undefined>): void 
     {};
 
   if (!source.VITE_CONTRACT_ID) {
-    throw new Error("VITE_CONTRACT_ID is required");
+    throw new Error("VITE_CONTRACT_ID is required – provide a Stellar contract address in your .env file");
+  }
+
+  if (!isValidContractId(source.VITE_CONTRACT_ID)) {
+    throw new Error(`VITE_CONTRACT_ID has invalid format. Expected Stellar contract address starting with 'C' followed by 55 alphanumeric characters, got: ${source.VITE_CONTRACT_ID}`);
   }
 
   if (source.VITE_SOROBAN_RPC_URL && !isValidUrl(source.VITE_SOROBAN_RPC_URL)) {
@@ -72,6 +80,10 @@ export function validateEnv(envVars?: Record<string, string | undefined>): void 
 
   if (source.VITE_HORIZON_URL && !isValidUrl(source.VITE_HORIZON_URL)) {
     throw new Error("VITE_HORIZON_URL must be a valid URL");
+  }
+
+  if (source.VITE_NETWORK_PASSPHRASE && !source.VITE_NETWORK_PASSPHRASE.trim()) {
+    throw new Error("VITE_NETWORK_PASSPHRASE cannot be empty");
   }
 
   if (!source.VITE_SENTRY_DSN) {

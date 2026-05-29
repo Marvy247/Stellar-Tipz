@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { BrowserRouter, useRoutes } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 
@@ -10,6 +10,7 @@ import ToastContainer from "@/components/shared/ToastContainer";
 import KeyboardShortcutsProvider from "@/components/shared/KeyboardShortcutsProvider";
 import PageTransition from "@/components/shared/PageTransition";
 import PageAnnouncement from "@/components/shared/PageAnnouncement";
+import { RpcHealthBanner } from "@/components/shared/RpcHealthBanner";
 import { routes } from "@/routes";
 import { useI18n } from "@/i18n";
 import { useOfflineStatus } from "@/hooks/useOfflineStatus";
@@ -17,6 +18,20 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import OnboardingTour from "@/features/onboarding/OnboardingTour";
 import { onUpdateAvailable, skipWaiting } from "@/services/serviceWorker";
+
+const PageFallback: React.FC = () => (
+  <div
+    className="flex items-center justify-center min-h-[400px]"
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+  >
+    <div className="text-center">
+      <div className="mb-4 h-8 w-8 border-4 border-gray-300 border-t-black rounded-full animate-spin mx-auto"></div>
+      <p className="text-gray-600">Loading page...</p>
+    </div>
+  </div>
+);
 
 const AppRoutes: React.FC = () => {
   const routeElements = useRoutes(routes);
@@ -39,6 +54,7 @@ const AppRoutes: React.FC = () => {
       <PageAnnouncement />
       <KeyboardShortcutsProvider />
       <ErrorBoundary>
+        <RpcHealthBanner />
         {isOffline && (
           <div
             role="status"
@@ -73,7 +89,9 @@ const AppRoutes: React.FC = () => {
           </a>
           <Header />
           <div className="flex-1">
-            <PageTransition animationType="fade">{routeElements}</PageTransition>
+            <PageTransition animationType="fade">
+              <Suspense fallback={<PageFallback />}>{routeElements}</Suspense>
+            </PageTransition>
           </div>
           <Footer />
         </div>
