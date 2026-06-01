@@ -87,11 +87,20 @@ pub fn is_token_accepted(env: &Env, token: &Address) -> bool {
     false
 }
 
-/// Convert token amount to XLM equivalent for leaderboard ranking
-/// For now, returns 1:1 ratio. In production, this would query the oracle.
+/// Convert token amount to XLM equivalent for leaderboard ranking.
+///
+/// When the token config carries no `oracle_address` the admin has explicitly
+/// accepted a 1:1 ratio, which is appropriate for XLM-pegged or stable-value
+/// assets.
+///
+/// When `oracle_address` is `Some`, live on-chain price queries are not yet
+/// wired in — the field is reserved for a future upgrade. Until that work lands,
+/// all tokens fall back to 1:1. Operators that need accurate cross-token
+/// leaderboard ordering should withhold oracle-backed tokens from the whitelist
+/// until oracle support is added. The `oracle_address` field on `AcceptedToken`
+/// already captures which tokens will benefit from real pricing once the
+/// integration is complete (see PR #745).
 fn convert_to_xlm_equivalent(_env: &Env, _token: &Address, amount: i128) -> i128 {
-    // TODO: Implement oracle price lookup
-    // For now, assume 1:1 conversion
     amount
 }
 

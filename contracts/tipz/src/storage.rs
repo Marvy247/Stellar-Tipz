@@ -840,23 +840,28 @@ pub fn set_streak(env: &Env, streak: &crate::types::Streak) {
 }
 
 /// Return the total streak bonus accumulated for a creator.
-/// TODO: Store this in Profile struct to avoid extra storage key
+///
+/// Streak-bonus storage is intentionally disabled. Persisting it requires either
+/// a new `DataKey` variant (increases contract footprint) or embedding a
+/// `streak_bonus` field in `Profile` (requires a storage-schema migration). Both
+/// options are deferred to the next planned contract upgrade. The three helpers
+/// are kept as zero-cost stubs so existing call sites compile without change.
+/// See PR #745 for the full deferral rationale.
 pub fn get_creator_streak_bonus(_env: &Env, _creator: &Address) -> u32 {
-    // Temporarily disabled to reduce DataKey variants
     0
 }
 
 /// Add streak bonus points to a creator.
-/// TODO: Store this in Profile struct to avoid extra storage key
-pub fn add_creator_streak_bonus(_env: &Env, _creator: &Address, _bonus: u32) {
-    // Temporarily disabled to reduce DataKey variants
-}
+///
+/// No-op until `streak_bonus` is introduced to `Profile` during a planned
+/// storage-schema migration. See [`get_creator_streak_bonus`] for details.
+pub fn add_creator_streak_bonus(_env: &Env, _creator: &Address, _bonus: u32) {}
 
 /// Adjust a creator's streak bonus by a signed delta.
-/// TODO: Store this in Profile struct to avoid extra storage key
-pub fn adjust_creator_streak_bonus(_env: &Env, _creator: &Address, _delta: i32) {
-    // Temporarily disabled to reduce DataKey variants
-}
+///
+/// No-op until `streak_bonus` is introduced to `Profile` during a planned
+/// storage-schema migration. See [`get_creator_streak_bonus`] for details.
+pub fn adjust_creator_streak_bonus(_env: &Env, _creator: &Address, _delta: i32) {}
 
 /// Remove all per-tipper tip index entries from temporary storage.
 ///

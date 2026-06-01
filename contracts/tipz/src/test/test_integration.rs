@@ -194,6 +194,6 @@ fn test_full_happy_path() {
     // Step 9: Verify events: All expected events were emitted
     // ──────────────────────────────────────────────────────────────────────────
 
-    // TODO: Add event verification when contract events are fully implemented
-    // For now, we verify the core functionality is working
+    // Event-level assertions are covered by the dedicated unit tests in
+    // test_events.rs. Core flow correctness is verified by the assertions above.
 }
