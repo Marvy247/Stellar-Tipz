@@ -1,3 +1,5 @@
+import { mapContractResponse } from "../helpers/format";
+
 /**
  * Raw profile shape returned by the Soroban contract before key mapping.
  * Field names match the Rust struct fields (snake_case).
@@ -103,6 +105,7 @@ export interface LeaderboardEntry {
   username: string;
   totalTipsReceived: string;
   creditScore: number;
+  score?: number; // Optional alias for backward compatibility / tests
 }
 
 /** Global contract statistics */

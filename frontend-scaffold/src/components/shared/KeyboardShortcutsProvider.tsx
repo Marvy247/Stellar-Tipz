@@ -52,6 +52,17 @@ const KeyboardShortcutsProvider: React.FC = () => {
     }
   }, [location.pathname]);
 
+  const openTipForm = useCallback(() => {
+    setHelpOpen(false);
+
+    if (/^\/@/.test(location.pathname)) {
+      focusTipAmount();
+      return;
+    }
+
+    setSearchOpen(true);
+  }, [focusTipAmount, location.pathname]);
+
   useKeyboardShortcuts([
     {
       key: "k",
@@ -74,19 +85,17 @@ const KeyboardShortcutsProvider: React.FC = () => {
       },
     },
     {
-      key: "d",
-      ctrl: true,
-      meta: true,
-      description: "Go to Dashboard",
+      key: "h",
+      sequence: ["g", "h"],
+      description: "Go to Home",
       action: () => {
         closeAll();
-        navigate("/dashboard");
+        navigate("/");
       },
     },
     {
       key: "l",
-      ctrl: true,
-      meta: true,
+      sequence: ["g", "l"],
       description: "Go to Leaderboard",
       action: () => {
         closeAll();
@@ -94,9 +103,18 @@ const KeyboardShortcutsProvider: React.FC = () => {
       },
     },
     {
+      key: "d",
+      sequence: ["g", "d"],
+      description: "Go to Dashboard",
+      action: () => {
+        closeAll();
+        navigate("/dashboard");
+      },
+    },
+    {
       key: "t",
-      description: "Focus tip amount input",
-      action: focusTipAmount,
+      description: "Open tip form",
+      action: openTipForm,
     },
     {
       key: "Escape",

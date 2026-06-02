@@ -128,6 +128,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
       const totalItems =
         displayResults.length > 0 ? displayResults.length : recentSearches.length;
 
+      if (totalItems === 0) return;
+
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => (prev + 1) % totalItems);
@@ -183,7 +185,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ isOpen, onClose }) => {
         aria-modal="true"
         aria-label="Global search"
       >
-        <div className="flex items-center border-b-[3px] border-black px-4 py-3">
+        <div
+          className="flex items-center border-b-[3px] border-black px-4 py-3"
+          role="search"
+          aria-label="Global creator search"
+        >
           <Search size={16} className="text-gray-800 dark:text-gray-200 shrink-0" />
           <span className="ml-2 mr-2 text-xs font-black uppercase tracking-[0.2em] text-gray-800 dark:text-gray-200">
             Search

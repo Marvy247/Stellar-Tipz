@@ -6,15 +6,24 @@ import { getModifierKey } from "@/hooks/useKeyboardShortcuts";
 interface ShortcutRowProps {
   keys: string[];
   description: string;
+  joiner?: "plus" | "then";
 }
 
-const ShortcutRow: React.FC<ShortcutRowProps> = ({ keys, description }) => (
+const ShortcutRow: React.FC<ShortcutRowProps> = ({
+  keys,
+  description,
+  joiner = "plus",
+}) => (
   <div className="flex items-center justify-between gap-4 border-b-2 border-black py-3 last:border-b-0">
     <span className="text-sm font-medium text-gray-700">{description}</span>
     <div className="flex shrink-0 items-center gap-1">
       {keys.map((k, i) => (
         <React.Fragment key={k}>
-          {i > 0 && <span className="text-xs font-bold text-gray-700 dark:text-gray-300">+</span>}
+          {i > 0 && (
+            <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
+              {joiner === "then" ? "then" : "+"}
+            </span>
+          )}
           <kbd className="inline-flex items-center justify-center border-2 border-black bg-white px-2 py-0.5 font-mono text-xs font-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
             {k}
           </kbd>
@@ -37,13 +46,14 @@ const ShortcutsModal: React.FC<ShortcutsModalProps> = ({ isOpen, onClose }) => {
       heading: "Navigation",
       shortcuts: [
         { keys: [mod, "K"], description: "Quick search creators" },
-        { keys: [mod, "D"], description: "Go to Dashboard" },
-        { keys: [mod, "L"], description: "Go to Leaderboard" },
+        { keys: ["G", "H"], joiner: "then", description: "Go to Home" },
+        { keys: ["G", "L"], joiner: "then", description: "Go to Leaderboard" },
+        { keys: ["G", "D"], joiner: "then", description: "Go to Dashboard" },
       ],
     },
     {
       heading: "Tip page",
-      shortcuts: [{ keys: ["T"], description: "Focus tip amount input" }],
+      shortcuts: [{ keys: ["T"], description: "Open tip form" }],
     },
     {
       heading: "General",
